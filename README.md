@@ -1,6 +1,6 @@
 # MothMotifs
 
 
-![motif fig](figs/motif_fig.png)
+![motif](figs/motif_fig.png)
 
-<img src="figs/motif_fig.png" width="10"/>
+<img src="figs/motif_fig.png" alt="motif" width="10"/>
