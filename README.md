@@ -1,10 +1,10 @@
 # MothMotifs
 
-<p align="center">
-  <img src="figs/motif_fig.jpg" width="75%"/>
-</p>
-
 This project builds off of previous work published in [[1]](#1) and uses pruned neural networks trained to model insect flight. A description of [[1]](#1), as well as all code used to generate sparse neural networks for use in this project, can be found in [this Github repository](https://github.com/oliviatessa/MothPruning#mothpruning). 
+
+<p align="center">
+  <img src="figs/motif_fig.jpg" width="60%"/>
+</p>
 
 ## Background
 
