@@ -14,7 +14,9 @@ Complex networks across many domains (ecological food webs, neural systems, elec
   <img src="figs/motifs.jpg" width="75%">
 </p>
 
-A subgraph must be statistically significant over a randomly connected graph to be considered a network motif of a given network. One metric for determining a subgraph’s statistical significance is its z-score when compared to randomly connected graphs.
+A subgraph must be statistically significant over a randomly connected graph to be considered a network motif of a given network. One metric for determining a subgraph’s statistical significance is its z-score when compared to randomly connected graphs:
+
+$$ N = N +1 $$
 
 Network motifs have been shown to be indicative of network functionality in control systems [[2]](#2). Quatifiying the distribution of the network motifs of a sparse neural network trained for a control task (i.e., insect flight) may give us insight to the network substructures necessary for biological control tasks. 
 
