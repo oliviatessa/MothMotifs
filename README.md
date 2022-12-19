@@ -1,3 +1,3 @@
 # MothMotifs
 
-<img src="figs/motif_fig.jpg" width="50%" align=center />
+<img src="figs/motif_fig.jpg" width="50%" align=left />
