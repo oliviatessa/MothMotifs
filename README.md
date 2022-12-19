@@ -1,6 +1,4 @@
 # MothMotifs
 
-
-![motif](figs/motif_fig.jpg)
-
-<img src="https://github.com/oliviatessa/MothMotifs/blob/main/figs/motif_fig.jpg" alt="motif" width="1"/>
+![test](https://github.com/favicon.ico)
+<img src="https://github.com/favicon.ico" width="48">
