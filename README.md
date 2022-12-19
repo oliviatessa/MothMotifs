@@ -12,7 +12,9 @@ A subgraph must be statistically significant over a randomly connected graph to 
 
 Here, we are quantifying the network motif distribution over the sparse networks pruned in [ref paper]. We have developed our own subgraph counting algorithm based around using the masking matrices of the pruned networks. Network motifs are determined by calculating the z-score against random networks with the same number of nodes, connections, and layer structure. 
 
-<img src="figs/motif_fig.jpg" width="50%"/>
+<p align="center">
+  <img src="figs/motif_fig.jpg" width="50%"/>
+</p>
 
 ## References
 <a id="1">[1]</a> 
