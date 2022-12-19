@@ -1,6 +1,3 @@
 # MothMotifs
 
-
-![motif](figs/motif_fig.png)
-
-<img src="figs/motif_fig.png" alt="motif" width="1"/>
+<img src="figs/motif_fig.jpg" width="50%"/>
