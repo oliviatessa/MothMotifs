@@ -14,15 +14,15 @@ Complex networks across many domains (ecological food webs, neural systems, elec
   <img src="figs/motifs.jpg" width="75%">
 </p>
 
-A subgraph must be statistically significant over a randomly connected graph to be considered a network motif of a given network. One metric for determining a subgraph’s statistical significance is its z-score when compared to randomly connected graphs:
-
-$$ N = N +1 $$
+A subgraph must be statistically significant over a randomly connected graph to be considered a network motif of a given network. One metric for determining a subgraph’s statistical significance is its z-score when compared to randomly connected graphs.
 
 Network motifs have been shown to be indicative of network functionality in control systems [[2]](#2). Quatifiying the distribution of the network motifs of a sparse neural network trained for a control task (i.e., insect flight) may give us insight to the network substructures necessary for biological control tasks. 
 
 ## Project Description
 
-Here, we are quantifying the network motif distribution over the sparse networks pruned in [[1]](#1). These networks were trained to model insect flight control and were sparsified via neural network pruning. We have developed our own subgraph counting algorithm based around using the masking matrices of the pruned networks. Network motifs are determined by calculating the z-score against random networks with the same number of nodes, connections, and layer structure. 
+Here, we are quantifying the network motif distribution over the sparse networks pruned in [[1]](#1). These networks were trained to model insect flight control and were sparsified via neural network pruning. We have developed our own subgraph counting algorithm based around using the masking matrices of the pruned networks. Network motifs are determined by calculating the z-score against random networks with the same number of nodes, connections, and layer structure. We use the motif z-score defined in [[3]](#3): 
+
+$$ z-score = \frac{N_{real} + N_{random}}{\sigma} $$
 
 ## References
 <a id="1">[1]</a> 
