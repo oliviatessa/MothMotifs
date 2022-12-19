@@ -4,7 +4,9 @@ Network analysis techniques (such as network motif theory) could be used to furt
 
 Complex networks across many domains (ecological food webs, neural systems, electrical circuits) are made up of statistically significant, subgraphs called network motifs. Network motifs are described by the number of nodes they involve and the nature of the connections in-between the nodes (e.g., directed, or bi-directed). The order of the motif is defined by the number of nodes it involves (i.e. n-order motif involves n+1 nodes). For example, a second-order diverging motif involves 3 nodes: 
 
-<img src="figs/div_motif.jpg" width="10%" align="center"/>
+<p align="center">
+  <img src="figs/div_motif.jpg" width="10%">
+</p>
 
 A subgraph must be statistically significant over a randomly connected graph to be considered a network motif of a given network. One metric for determining a subgraph’s statistical significance is its z-score when compared to randomly connected graphs. 
 
