@@ -26,6 +26,8 @@ $$ \textrm{z-score} = \frac{N_{real} - N_{rand}}{\sigma} $$
 
 where $N_{real}$ is the number of occurances of a subgraph in the real network (in this case a pruned NN), $N_{rand}$ is the average occurance of a subgraph in 1000 randomly generated networks, and $\sigma$ is the standard deviatation. The randomly generated networks have the same number of layers, nodes, and weights as the real pruned network. They also share all of the normal constraints of a feed-forward neural network (layer structure, bias term, etc.). 
 
+We are comparing the prevelence of network motifs across 400 networks trained to control insect flight. These networks were pruned to a maximum level of sparsity via a sequential, magnitude-based pruning algorithm described in [[1]](#1). 
+
 ## References
 <a id="1">[1]</a> 
 Zahn, Olivia, Jorge Bustamante Jr, Callin Switzer, Thomas L. Daniel, and J. Nathan Kutz. “Pruning deep neural networks generates a sparse, bio-inspired nonlinear controller for insect flight.” PLoS Computational Biology 18.9 (2022): e1010512. https://doi.org/10.1371/journal.pcbi.1010512
