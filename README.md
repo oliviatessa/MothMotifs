@@ -8,7 +8,7 @@ This project builds off of previous work published in [[1]](#1) and uses pruned 
 
 ## Background
 
-Complex networks across many domains (ecological food webs, neural systems, electrical circuits) are made up of statistically significant, subgraphs called network motifs. Network motifs are described by the number of nodes they involve and the nature of the connections in-between the nodes (e.g., directed, or bi-directed). The order of the motif is defined by the number of nodes it involves (i.e. n-order motif involves n+1 nodes). In a feed-forward neural network, only directed n-order motifs are possible. Here are some 1<sup>st</sup>-, 2<sup>nd</sup>-, and 3<sup>rd</sup>-order motifs possible in a feed-forward neural network: 
+Complex networks across many domains (ecological food webs, neural systems, electrical circuits) are made up of statistically significant, subgraphs called network motifs. Network motifs are described by the number of nodes they involve and the nature of the connections in-between the nodes (e.g., directed, or bi-directed). The order of the motif is defined by the number of nodes it involves (i.e. n-order motif involves n+1 nodes). In a feed-forward neural network, only directed n-order motifs are possible. Here are some of the 1<sup>st</sup>-, 2<sup>nd</sup>-, and 3<sup>rd</sup>-order motifs possible in a feed-forward neural network: 
 
 <p align="center">
   <img src="figs/motifs.jpg" width="75%">
