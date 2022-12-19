@@ -3,4 +3,4 @@
 
 ![motif](figs/motif_fig.jpg)
 
-<img src="figs/motif_fig.png" alt="motif" width="50%"/>
+<img src="figs/motif_fig.png" alt="motif" width="10%"/>
