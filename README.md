@@ -22,7 +22,9 @@ Network motifs have been shown to be indicative of network functionality in cont
 
 Here, we are quantifying the network motif distribution over the sparse networks pruned in [[1]](#1). These networks were trained to model insect flight control and were sparsified via neural network pruning. We have developed our own subgraph counting algorithm based around using the masking matrices of the pruned networks. Network motifs are determined by calculating the z-score against random networks with the same number of nodes, connections, and layer structure. We use the motif z-score defined in [[3]](#3): 
 
-$$ z-score = \frac{N_{real} + N_{random}}{\sigma} $$
+$$ \textrm{z-score} = \frac{N_{real} - N_{rand}}{\sigma} $$
+
+where $N_{real}$ is the number of occurances of a subgraph in the real network (in this case a pruned NN), $N_{rand}$ is the average occurance of a subgraph in 1000 randomly generated networks, and $\sigma$ is the standard deviatation. The randomly generated networks have the same number of layers, nodes, and weights as the real pruned network. They also share all of the normal constraints of a feed-forward neural network (layer structure, bias term, etc.). 
 
 ## References
 <a id="1">[1]</a> 
@@ -30,4 +32,7 @@ Zahn, Olivia, Jorge Bustamante Jr, Callin Switzer, Thomas L. Daniel, and J. Nath
 
 <a id="2">[2]</a> 
 Hu, Yu, et al. "Feedback through graph motifs relates structure and function in complex networks." Physical Review E 98.6 (2018): 062312. https://journals.aps.org/pre/pdf/10.1103/PhysRevE.98.062312
+
+<a id="3">[3]</a> 
+Milo, Ron, et al. "Network motifs: simple building blocks of complex networks." Science 298.5594 (2002): 824-827. https://www.science.org/doi/pdf/10.1126/science.298.5594.824?casa_token=-0bkijkscyUAAAAA:teWQJRVXPBEQm29Ixu_zDD5stO6izuTdxi1rMzazg8nnnyJQtgl6Za-tTylPG6CLqsbJek0eXN8SK1c
 
