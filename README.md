@@ -1,3 +1,3 @@
 # MothMotifs
 
-<img src="https://github.com/favicon.ico" width="48">
+<img src="figs/motif_fig.jpg" width="48">
