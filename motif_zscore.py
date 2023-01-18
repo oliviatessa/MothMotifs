@@ -10,15 +10,28 @@ import pandas as pd
 # # Load the pruned networks 
 
 # %%
-f = 'pruned_bias'
-timestamp = '2022_11_05__01_04_10'
+modeltimestamp = '2022_11_05__01_04_10'
+
+dataOutput = '/gscratch/dynamicsai/otthomas/MothPruning/mothMachineLearning_dataAndFigs/DataOutput/Experiments/pruned_bias/pruned_bias/'
+modelSubdir = os.path.join(dataOutput, modeltimestamp)
+
+zscoreOutput = '/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/DataOutput/zscoreTables/'
+zscoreSubdir = os.path.join(zscoreOutput, modeltimestamp)
+if not os.path.exists(zscoreSubdir):
+    os.mkdir(zscoreSubdir)
 
 #Load the networks
 sparseNetsFile = 'sparseNetworks.pkl'
-sparseNetworks = pickle.load(open(os.path.join(f, timestamp, sparseNetsFile), 'rb'))
+sparseNetworks = pickle.load(open(os.path.join( modelSubdir, sparseNetsFile), 'rb'))
+
+masksFile = 'masks_minmax_Adam5.pkl'
+masks = pickle.load(open(os.path.join(modelSubdir, masksFile), 'rb'))
+
+bmasksFile = 'bmasks_minmax_Adam5.pkl'
+bmasks = pickle.load(open(os.path.join(modelSubdir, bmasksFile), 'rb'))
 
 #Load the losses
-losses = pickle.load(open(os.path.join(f, timestamp, 'preprocessedNets', 'pruneLosses.pkl'),'rb'))
+losses = pickle.load(open(os.path.join(modelSubdir, 'preprocessedNets', 'pruneLosses.pkl'),'rb'))
 
 losses = np.array(losses)
 losses = np.transpose(losses)
@@ -30,25 +43,90 @@ lossesDF = pd.DataFrame(losses, columns=['0%', '15%', '25%', '35%', '45%', '55%'
 # # Find the masks
 
 # %%
-masks = []
+sparseMasks = []
 for i in range(len(sparseNetworks)):
-    net = sparseNetworks[i]
-    sparsity = net[0]
-    net = net[1]
-    maskNet = []
-    for i in np.arange(0,len(net),2):
-        m = np.abs(net[i]) * np.reciprocal(np.abs(net[i]), where = np.abs(net[i])!=0)
-        m = np.round(m)
-        mask = m.astype(int)
-        
-        #Add bias term
-        biasRow = np.abs(net[i+1]) * np.reciprocal(np.abs(net[i+1]), where = np.abs(net[i+1])!=0)
-        mask = np.vstack([mask, biasRow])
-        
-        maskNet.append(mask)
-        
-    
-    masks.append((sparsity, maskNet))
+    sparsity = sparseNetworks[i][0]
+    m = [masks[sparsity][j][i] for j in range(5)]
+    bm = [bmasks[sparsity][j][i] for j in range(5)]
+
+    #Combine mask and bias mask by adding bias mask as last row of mask 
+    mask = [np.append(m[j], np.array(bm[j]).reshape([1, len(bm[j])]), axis=0) for j in range(5)]
+
+    sparseMasks.append((sparsity, mask))
+
+# %% [markdown]
+# # Remove ghost nodes 
+
+# %% [markdown]
+# Ghost nodes: nodes with no upstream input
+
+# %%
+def rmGhostNodes(masks): 
+    sparseMasks_wo_ghosts = []
+    for k in range(len(masks)):
+        count = 0
+        m = masks[k][1]
+        #Iterate over the masking layers in each network 
+        for i in range(len(m)):
+            #Iterate over the columns of the mask 
+            for j in range(len(m[i].T)):
+                column = m[i].T[j]
+                #Check to see if there are any connections between this node and the nodes in the previous layer. 
+                #If there are no connections, that means there are no upstream connections and this is a ghost node. 
+                n = np.count_nonzero(column)
+                if n == 0:
+                    #print('Found a ghost node: %s node in layer %s.' % (j, i))
+                    count += 1
+                    #There is no input into this node 
+                    #so make all downstream connections 0
+
+                    #i+1 gets us to the next mask 
+                    #where the jth row is the ghost node 
+                    m[i+1][j] = m[i+1][j] * 0
+
+        #print("Removed %s ghost nodes total." % (count))
+        sparseMasks_wo_ghosts.append((masks[k][0],m))
+
+    pickle.dump(sparseMasks_wo_ghosts, open(os.path.join(modelSubdir, 'postprune', 'masks_wo_ghost_nodes.pkl'), 'wb'))
+
+    return sparseMasks_wo_ghosts
+
+# %% [markdown]
+# # Remove dead nodes
+
+# %% [markdown]
+# Dead nodes: nodes with no downstream output
+
+# %%
+def rmDeadNodes(masks): 
+    sparseMasks_wo_dead = []
+    for k in range(len(masks)):
+        count = 0
+        m = masks[k][1]
+        #Reverse iterate over the masking layers in each network, excluding the input and output layers
+        for i in reversed(range(1, len(m))):
+            #Iterate over the rows of the mask, skipping the bias (last row)
+            for j in range(len(m[i])-1):
+                row = m[i][j]
+                #Check to see if there are any connections between this node and the nodes in the next layer. 
+                #If there are no connections, that means there are no downstream connections and this is a dead node. 
+                n = np.count_nonzero(row)
+                if n == 0:
+                    #print('Found a dead node: %s node in layer %s.' % (j, i))
+                    count += 1
+                    #There is no output from this node 
+                    #so make all upstream connections 0
+
+                    #i-1 gets us to the previous mask 
+                    #where the jth column is the ghost node 
+                    m[i-1].T[j] = m[i-1].T[j] * 0
+
+        #print("Removed %s ghost nodes total." % (count))
+        sparseMasks_wo_dead.append((masks[k][0],m))
+
+    pickle.dump(sparseMasks_wo_dead, open(os.path.join(modelSubdir, 'postprune', 'masks_wo_dead_nodes.pkl'), 'wb'))
+
+    return sparseMasks_wo_dead
 
 # %% [markdown]
 # # Find the motif z-score
@@ -141,15 +219,24 @@ def socm(m):
     '''
 
     SOCM = 0
+    numFCUS = [0,0,0,0,0,0]
 
-    for i in range(len(m)): 
+    for i in range(len(m)):
+        nodes = 0
         #Calculate second-order converging motifs
         for column in m[i].T:
             n = np.count_nonzero(column)
             if n >= 2:
                 SOCM += math.factorial(n)/(math.factorial(2)*math.factorial(n-2))
 
-    return SOCM
+            
+            #also calculate number of remaining nodes with upstream input, skip input 
+            if n > 0: 
+                nodes += 1
+                    
+        numFCUS[i+1] = nodes
+
+    return SOCM, numFCUS
 
 # %% [markdown]
 # #### Chain
@@ -326,7 +413,7 @@ def randomNetMotifs(randomNet):
 
     rFOM, rFOMList = fom(randomNet)
     rSODM, rnumFC = sodm(randomNet)
-    rSOCM = socm(randomNet)
+    rSOCM, rnumFCUS = socm(randomNet)
     rSOChain = sochain(randomNet)
     rTODM = todm(randomNet)
     rTOCM = tocm(randomNet)
@@ -367,8 +454,12 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
 # %% [markdown]
 # ## Z-score dataframe
 
+# %% [markdown]
+# ### Remove ghost and dead nodes from the networks 
+
 # %%
-masksTest = masks[0:5]
+sparseMasks_wo_G = rmGhostNodes(sparseMasks)
+sparseMasks_wo_G_D = rmDeadNodes(sparseMasks_wo_G)
 
 # %%
 zscoreDF = pd.DataFrame(columns=['Sparsity Index', 'Masks',
@@ -388,14 +479,15 @@ zscoreDF = pd.DataFrame(columns=['Sparsity Index', 'Masks',
                                 'Z - S-O diverging motifs', 'Z - S-O converging motifs', 
                                 'Z - S-O chain motifs',  'Z - T-O chain motifs',
                                 'Z - T-O diverging motifs', 'Z - T-O converging motifs',
-                                'Number of nodes in each layer with downstream output', 
+                                'Number of nodes in each layer with downstream output',
+                                'Number of nodes in each layer with upstream input', 
                                 'Number of connections in each layer'])
 
 # %%
-for (sparsity, m) in masksTest: 
+for (sparsity, m) in sparseMasks_wo_G_D: 
     FOM, FOMList = fom(m)
     SODM, numFC = sodm(m)
-    SOCM = socm(m)
+    SOCM, numFCUS = socm(m)
     SOChain = sochain(m)
     TODM = todm(m)
     TOCM = tocm(m)
@@ -438,12 +530,10 @@ for (sparsity, m) in masksTest:
                     float(ZSODM), float(ZSOCM), float(ZSOChain),
                     float(ZTODM), float(ZTOCM), float(ZTOChain),
 
-                    numFC, FOMList]
+                    numFC, numFCUS, FOMList]
 
     zscoreDF.loc[len(zscoreDF.index)] = zscoreData
 
-zscoreDF.to_csv(os.path.join(f, timestamp, 'zscoreDF.csv'))
-# %%
-print(zscoreDF.head())
+    zscoreDF.to_csv(os.path.join(zscoreSubdir, 'zscoreDF.csv'))
 
 
