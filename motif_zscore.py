@@ -84,7 +84,6 @@ def rmGhostNodes(masks):
                     #where the jth row is the ghost node 
                     m[i+1][j] = m[i+1][j] * 0
 
-        #print("Removed %s ghost nodes total." % (count))
         sparseMasks_wo_ghosts.append((masks[k][0],m))
 
     pickle.dump(sparseMasks_wo_ghosts, open(os.path.join(modelSubdir, 'postprune', 'masks_wo_ghost_nodes.pkl'), 'wb'))
@@ -121,7 +120,6 @@ def rmDeadNodes(masks):
                     #where the jth column is the ghost node 
                     m[i-1].T[j] = m[i-1].T[j] * 0
 
-        #print("Removed %s ghost nodes total." % (count))
         sparseMasks_wo_dead.append((masks[k][0],m))
 
     pickle.dump(sparseMasks_wo_dead, open(os.path.join(modelSubdir, 'postprune', 'masks_wo_dead_nodes.pkl'), 'wb'))
@@ -341,6 +339,35 @@ def tochain(m):
     return TOChain
 
 # %% [markdown]
+# #### Bi-fan
+
+# %%
+def bifan(m):
+    '''
+    Calculates the number of bi-fan motifs in the network.
+        
+    Input(s): the mask of the pruned network, as a list of matrices
+    Returns: BIFAN (total number of bi-fan motifs in the network)
+    '''
+    
+    BIFAN = 0
+
+    for i in range(len(m)): 
+        #For each row, calculate the dot product of the row with the rest of the rows in the mask 
+        for j in range(len(m[i])-1):
+            row = m[i][j]
+            mat = m[i][j+1:]
+            count = np.dot(mat, row) #Each element in count represents the number of bifans row j shares with all subsequent rows 
+
+            #Calculate the number of bifans
+            for n in count: 
+                n = int(n)
+                if n >= 2: 
+                    BIFAN += math.factorial(n)/(math.factorial(2)*math.factorial(n-2))
+    
+    return BIFAN
+
+# %% [markdown]
 # ### Random networks
 
 # %% [markdown]
@@ -418,8 +445,9 @@ def randomNetMotifs(randomNet):
     rTODM = todm(randomNet)
     rTOCM = tocm(randomNet)
     rTOChain = tochain(randomNet)
+    rBIFAN = bifan(randomNet)
     
-    return rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain
+    return rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain, rBIFAN, rnumFC, rnumFCUS
 
 # %% [markdown]
 # #### Average random motifs
@@ -440,13 +468,16 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
                                         'rSOChain',
                                         'rTODM',
                                         'rTOCM', 
-                                        'rTOChain'])
+                                        'rTOChain',
+                                        'rBIFAN',
+                                        'rnumFC',
+                                        'rnumFCUS'])
 
     for r in range(numRand):
         randomNet = buildRandomNet(numFC, FOMList)
-        rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain = randomNetMotifs(randomNet)
+        rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain, rBIFAN, rnumFC, rnumFCUS = randomNetMotifs(randomNet)
 
-        rMotifs = [float(rSODM), float(rSOCM), float(rSOChain), float(rTODM), float(rTOCM), float(rTOChain)]
+        rMotifs = [float(rSODM), float(rSOCM), float(rSOChain), float(rTODM), float(rTOCM), float(rTOChain), float(rBIFAN), rnumFC, rnumFCUS]
         randomNetDF.loc[len(randomNetDF.index)] = rMotifs
 
     return randomNetDF
@@ -467,18 +498,24 @@ zscoreDF = pd.DataFrame(columns=['Sparsity Index', 'Masks',
                                 'S-O diverging motifs (real)', 'S-O converging motifs (real)', 
                                 'S-O chain motifs (real)',  'T-O chain motifs (real)',
                                 'T-O diverging motifs (real)', 'T-O converging motifs (real)',
+                                'T-O Bi-Fan motifs (real)',
                                 
                                 'Avg - S-O diverging motifs (random)', 'Avg - S-O converging motifs (random)', 
                                 'Avg - S-O chain motifs (random)',  'Avg - T-O chain motifs (random)',
                                 'Avg - T-O diverging motifs (random)', 'Avg - T-O converging motifs (random)',
+                                'Avg - T-O Bi-Fan motifs',
+
                                  
                                 'SD - S-O diverging motifs (random)', 'SD - S-O converging motifs (random)', 
                                 'SD - S-O chain motifs (random)',  'SD - T-O chain motifs (random)',
                                 'SD - T-O diverging motifs (random)', 'SD - T-O converging motifs (random)',
+                                'SD - T-O Bi-Fan motifs',
                                 
                                 'Z - S-O diverging motifs', 'Z - S-O converging motifs', 
                                 'Z - S-O chain motifs',  'Z - T-O chain motifs',
                                 'Z - T-O diverging motifs', 'Z - T-O converging motifs',
+                                'Z - T-O Bi-Fan motifs',
+
                                 'Number of nodes in each layer with downstream output',
                                 'Number of nodes in each layer with upstream input', 
                                 'Number of connections in each layer'])
@@ -492,6 +529,7 @@ for (sparsity, m) in sparseMasks_wo_G_D:
     TODM = todm(m)
     TOCM = tocm(m)
     TOChain = tochain(m)
+    BIFAN = bifan(m)
 
     randomNetDF = buildRandomMotifsDF(numFC, FOMList, numRand=1000)
 
@@ -501,6 +539,7 @@ for (sparsity, m) in sparseMasks_wo_G_D:
     AvgrTODM = randomNetDF['rTODM'].mean()
     AvgrTOCM = randomNetDF['rTOCM'].mean()
     AvgrTOChain = randomNetDF['rTOChain'].mean()
+    AvgrBIFAN = randomNetDF['rBIFAN'].mean()
 
     SDrSODM = randomNetDF['rSODM'].std()
     SDrSOCM = randomNetDF['rSOCM'].std()
@@ -508,6 +547,7 @@ for (sparsity, m) in sparseMasks_wo_G_D:
     SDrTODM = randomNetDF['rTODM'].std()
     SDrTOCM = randomNetDF['rTOCM'].std()
     SDrTOChain = randomNetDF['rTOChain'].std()
+    SDrBIFAN = randomNetDF['rBIFAN'].std()
 
     ZSODM = (SODM - AvgrSODM)/SDrSODM
     ZSOCM = (SOCM - AvgrSOCM)/SDrSOCM
@@ -515,20 +555,25 @@ for (sparsity, m) in sparseMasks_wo_G_D:
     ZTODM = (TODM - AvgrTODM)/SDrTODM
     ZTOCM = (TOCM - AvgrTOCM)/SDrTOCM
     ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+    ZBIFAN = (BIFAN - AvgrBIFAN)/SDrBIFAN
 
     zscoreData = [float(sparsity), m, 
                     float(FOM), 
                     float(SODM), float(SOCM), float(SOChain),
                     float(TODM), float(TOCM), float(TOChain),
+                    float(BIFAN),
 
                     float(AvgrSODM), float(AvgrSOCM), float(AvgrSOChain),
                     float(AvgrTODM), float(AvgrTOCM), float(AvgrTOChain),
+                    float(AvgrBIFAN),
 
                     float(SDrSODM), float(SDrSOCM), float(SDrSOChain),
                     float(SDrTODM), float(SDrTOCM), float(SDrTOChain),
+                    float(SDrBIFAN),
 
                     float(ZSODM), float(ZSOCM), float(ZSOChain),
                     float(ZTODM), float(ZTOCM), float(ZTOChain),
+                    float(ZBIFAN),
 
                     numFC, numFCUS, FOMList]
 
