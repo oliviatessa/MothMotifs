@@ -374,202 +374,56 @@ def bifan(m):
 # #### Build random network
 
 # %%
-def randomPruning(FOMList, numFC): 
+def randomPruning(FOMList): 
     '''
     Randomly prunes a fully-connected random network to the same number of weights and nodes (in each layer respectively) as the real network. 
     This part of constructing the random network occurs before the ghost and dead nodal pruning of the real network.
     '''
 
-    #Remove the bias from numFC
-    numFC = [numFC[i]-1 if FOMList[i][1] != 0 else numFC[i] for i in range(len(numFC)-1)] #range(len(numFC)-1) because there is never a bias in the output layer
-    numFC.append(7) #add in final layer
+    #Build fully-connected network of zeros, including a bias
+    r1 = np.zeros((10*400))
+    r2 = np.zeros((400*400))
+    r3 = np.zeros((400*400))
+    r4 = np.zeros((400*16))
+    r5 = np.zeros((16*7))
 
-    #Build fully-connected network of zeros with only the live nodes found after post-pruning
-    # the ineffuctual nodes. 
-    r1 = np.zeros((numFC[0]*numFC[1]))
-    r2 = np.zeros((numFC[1]*numFC[2]))
-    r3 = np.zeros((numFC[2]*numFC[3]))
-    r4 = np.zeros((numFC[3]*numFC[4]))
-    r5 = np.zeros((numFC[4]*numFC[5]))
+    r1b = np.zeros((400))
+    r2b = np.zeros((400))
+    r3b = np.zeros((400))
+    r4b = np.zeros((16))
+    r5b = np.zeros((7))
 
-    #Nlw corresponds to the number of remaining weights or biases in the real network. 
-    Nlw1 = FOMList[0][0]
-    Nlw2 = FOMList[1][0]
-    Nlw3 = FOMList[2][0]
-    Nlw4 = FOMList[3][0]
-    Nlw5 = FOMList[4][0]
+    #Set the first n values of the list to one. n corresponds to the number of remaining weights or biases in the real network.  
+    r1[0:FOMList[0][0]] = 1 
+    r2[0:FOMList[1][0]] = 1
+    r3[0:FOMList[2][0]] = 1 
+    r4[0:FOMList[3][0]] = 1 
+    r5[0:FOMList[4][0]] = 1 
 
-    #Nln corresponds to the total number of live nodes after post-pruning associated with
-    # one layer (inc. input and output nodes). 
-    Nln1 = numFC[0]+numFC[1]
-    Nln2 = numFC[1]+numFC[2]
-    Nln3 = numFC[2]+numFC[3]
-    Nln4 = numFC[3]+numFC[4]
-    Nln5 = numFC[4]+numFC[5]
-
-    #Nr corresponds to the difference between the total remaining weights and total remaining
-    # nodes. 
-    Nr1 = Nlw1 - Nln1
-    Nr2 = Nlw2 - Nln2
-    Nr3 = Nlw3 - Nln3
-    Nr4 = Nlw4 - Nln4
-    Nr5 = Nlw5 - Nln5
-
-    NList = [(Nlw1, Nln1, Nr1),(Nlw2, Nln2, Nr2),(Nlw3, Nln3, Nr3),
-             (Nlw4, Nln4, Nr4),(Nlw5, Nln5, Nr5)]
-    
-    rList = [r1, r2, r3, r4, r5]
-
-    #print('Nlw1: %s, Nln1: %s, Nr1: %s' %(Nlw1, Nln1, Nr1))
-    #print('Nlw2: %s, Nln2: %s, Nr2: %s' %(Nlw2, Nln2, Nr2))
-    #print('Nlw3: %s, Nln3: %s, Nr3: %s' %(Nlw3, Nln3, Nr3))
-    #print('Nlw4: %s, Nln4: %s, Nr4: %s' %(Nlw4, Nln4, Nr4))
-    #print('Nlw5: %s, Nln5: %s, Nr5: %s' %(Nlw5, Nln5, Nr5))
-
-    #Set the first Nr values of the list to one if Nr is greater than zero and then randomly shuffle. 
-    for i in range(len(rList)):
-        if NList[i][2] > 0:
-            rList[i][0:NList[i][2]] = 1
-            np.random.shuffle(rList[i])
-        else:
-            pass
-
-
-    #Reshape the matrices
-    for i in range(len(rList)):
-        rList[i] = np.reshape(rList[i], (numFC[i],numFC[i+1]))
-
-
-    #The following is to assure we have at least one live weight connected to each node in
-    # the layer (inputs and outputs). 
-    for r in range(len(rList)):
-        if NList[r][2] > 0: 
-            #For each row place a random 1
-            for i in range(len(rList[r])):
-                #print('r: %s and i: %s' %(r,i))
-                row = np.array(rList[r][i])
-                zeroElements = np.nonzero(row==0)[0] #Finds all indices with a zero
-                idx = np.random.choice(zeroElements) #Picks a random index
-                rList[r][i][idx] = 1 #Sets the value at that index to one
-
-            #For each column place a random 1
-            for j in range(len(rList[r].T)):
-                #print('r: %s and j: %s' %(r,j))
-                col = np.array(rList[r].T[j])
-                zeroElements = np.nonzero(col==0)[0] #Finds all indices with a zero
-                idx = np.random.choice(zeroElements) #Picks a random index
-                rList[r].T[j][idx] = 1 #Sets the value at that index to one
-        else:
-            if r == 3:
-                if NList[r][2] < 0:
-                    flatr = rList[r].flatten()
-                    flatr[0:abs(NList[r][2])] = 1
-                    np.random.shuffle(flatr)
-                    rList[r] = np.reshape(flatr, (numFC[r],numFC[r+1]))
-
-                #For each row place a random 1
-                for i in range(len(rList[r])):
-                    #print('r: %s and i: %s' %(r,i))
-                    row = np.array(rList[r][i])
-                    zeroElements = np.nonzero(row==0)[0] #Finds all indices with a zero
-                    idx = np.random.choice(zeroElements) #Picks a random index
-                    rList[r][i][idx] = 1 #Sets the value at that index to one
-
-                if abs(NList[r][2])+numFC[r] < FOMList[r][0]:
-                    diff = FOMList[r][0] - (abs(NList[r][2])+numFC[r])
-                    for d in range(diff): #place a random one in the matrix 
-                        z = np.nonzero(rList[r]==0)
-                        idx = np.random.choice(z[0])
-                        x = z[0][idx]
-                        y = z[1][idx]
-                        rList[r][x][y] = 1
-
-            if r == 4: 
-                #If the number of nodes in the penultimate layer is less than the nodes in the output layer
-                if numFC[r] < numFC[r+1]:
-                    w = FOMList[r][0]
-                    numExtraCols = numFC[r+1]-numFC[r]
-                    m = np.eye(numFC[r])
-                    #If the number of remaining weights is greater that the number of nodes in the output layer
-                    if w > numFC[r+1]:
-                        numExtraW = w - numFC[r+1]
-                        for k in range(numExtraCols):
-                            col = np.zeros((numFC[r],1))
-                            z = np.nonzero(col==0)
-                            idx = np.random.choice(z[0])
-                            col[idx] = 1
-                            m = np.append(m, col, axis=1)
-                        for t in range(numExtraW):
-                            z = np.nonzero(m==0)
-                            idx = np.random.choice(z[0])
-                            x = z[0][idx]
-                            y = z[1][idx]
-                            m[x][y] = 1
-                    else:
-                        for k in range(numExtraCols):
-                            col = np.zeros((numFC[r],1))
-                            z = np.nonzero(col==0)
-                            idx = np.random.choice(z[0])
-                            col[idx] = 1
-                            m = np.append(m, col, axis=1)
-                else: #if numFC[r] > numFC[r+1]
-                    w = FOMList[r][0]
-                    numExtraRows = numFC[r]-numFC[r+1]
-                    m = np.eye(numFC[r+1])
-                    #If the number of remaining weights is greater than the number of nodes in the penultimate layer
-                    if w > numFC[r]:
-                        numExtraW = w - (numFC[r+1]+numExtraRows)
-                        for k in range(numExtraRows):
-                            row = np.zeros((1,numFC[r+1]))
-                            z = np.nonzero(row==0)
-                            idx = np.random.choice(z[1])
-                            row[0][idx] = 1
-                            m = np.append(m, row, axis=0)
-                        for t in range(numExtraW):
-                            z = np.nonzero(m==0)
-                            idx = np.random.choice(z[0])
-                            x = z[0][idx]
-                            y = z[1][idx]
-                            m[x][y] = 1
-                    else:
-                        for k in range(numExtraRows):
-                            row = np.zeros((1,numFC[r+1]))
-                            z = np.nonzero(row==0)
-                            idx = np.random.choice(z[1])
-                            row[0][idx] = 1
-                            
-                np.random.shuffle(m)
-                rList[r]=m
-
-    '''Create the random bias vectors'''
-
-    #Build zeros vector the length of the bias term
-    r1b = np.zeros((numFC[1]))
-    r2b = np.zeros((numFC[2]))
-    r3b = np.zeros((numFC[3]))
-    r4b = np.zeros((numFC[4]))
-    r5b = np.zeros((numFC[5]))
-
-    #Set the number of live bias terms to 1
     r1b[0:FOMList[0][1]] = 1 
     r2b[0:FOMList[1][1]] = 1
     r3b[0:FOMList[2][1]] = 1 
     r4b[0:FOMList[3][1]] = 1 
     r5b[0:FOMList[4][1]] = 1 
 
-    #Randomly shuffle the bias matrices
+    #Randomly shuffle the matrices
+    np.random.shuffle(r1)
+    np.random.shuffle(r2)
+    np.random.shuffle(r3)
+    np.random.shuffle(r4)
+    np.random.shuffle(r5)
+
     np.random.shuffle(r1b)
     np.random.shuffle(r2b)
     np.random.shuffle(r3b)
     np.random.shuffle(r4b)
     np.random.shuffle(r5b)
 
-    rbList = [r1b, r2b, r3b, r4b, r5b]
-    
-    randomNet = []
-    for i in range(len(rList)):
-        randomNet.append(np.vstack([rList[i],rbList[i]]))
-
+    randomNet = [np.vstack([np.reshape(r1, (10,400)),r1b]),
+                np.vstack([np.reshape(r2, (400,400)),r2b]),
+                np.vstack([np.reshape(r3, (400,400)),r3b]),
+                np.vstack([np.reshape(r4, (400,16)),r4b]),
+                np.vstack([np.reshape(r5, (16,7)),r5b])]
 
     return randomNet
 
@@ -675,7 +529,7 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
                                         'rnumFCUS'])
 
     for r in range(numRand):
-        randomNet = randomPruning(FOMList, numFC)
+        randomNet = buildRandomNet(numFC, FOMList)
         rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain, rBIFAN, rnumFC, rnumFCUS = randomNetMotifs(randomNet)
 
         rMotifs = [float(rSODM), float(rSOCM), float(rSOChain), float(rTODM), float(rTOCM), float(rTOChain), float(rBIFAN), rnumFC, rnumFCUS]
@@ -689,60 +543,26 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
 # %% [markdown]
 # ### Remove ghost and dead nodes from the networks 
 
-# %% [markdown]
-# sparseMasks = sparseMasks[0:10]
-# 
-# sparseMasks_wo_G = rmGhostNodes(sparseMasks)
-# sparseMasks_wo_G_D = rmDeadNodes(sparseMasks_wo_G)
-# 
-# count=0
-# for (sparsity, m) in sparseMasks:
-#     FOM, FOMList = fom(m)
-#     SODM, numFC = sodm(m)
-#     SOCM, numFCUS = socm(m)
-# 
-#     randNet = randomPruning(FOMList, numFC)
-# 
-#     rFOM, rFOMList = fom(randNet)
-#     rSODM, rnumFC = sodm(randNet)
-#     rSOCM, rnumFCUS = socm(randNet)
-# 
-#     print('Network %s' %(count))
-#     print('Real FOMList: %s' %(FOMList))
-#     print('Random FOMList: %s' %(rFOMList))
-#     print('Real numFC down: %s' %(numFC))
-#     print('Random numFC down: %s' %(rnumFC))
-#     print('Real numFC up: %s' %(numFCUS))
-#     print('Random numFC up: %s' %(rnumFCUS))
-# 
-#     count+=1
-# 
-# '''
-# randNet_wo_G = rmGhostNodes(randNetX)
-# randNet_wo_G_D = rmDeadNodes(randNet_wo_G)
-# 
-# for (sparsity, m) in sparseMasks_wo_G_D:
-#     FOM, numW_and_B = fom(m)
-#     SODM, numFC = sodm(m)
-#     SOCM, numFCUS = socm(m)
-#     
-#     randNet = randNet_wo_G_D[1]
-# 
-#     rFOM, rFOMList = fom(randNet)
-#     rSODM, rnumFC = sodm(randNet)
-#     rSOCM, rnumFCUS = socm(randNet)
-# 
-#     print(numW_and_B)
-#     print(rFOMList)
-#     print(numFC)
-#     print(rnumFC)
-#     print(numFCUS)
-#     print(rnumFCUS)
-# '''
+# %%
+test_net = sparseMasks
+FOM, numW_and_B = fom(test_net)
+SODM, numFC = sodm(test_net)
+SOCM, numFCUS = socm(test_net)
+
+randNet = randomPruning(numW_and_B)
+
+rFOM, rFOMList = fom(randNet)
+rSODM, rnumFC = sodm(randNet)
+rSOCM, rnumFCUS = socm(randNet)
+
+print(numW_and_B)
+print(rFOMList)
+print(numFC)
+print(rnumFC)
+print(numFCUS)
+print(rnumFCUS)
 
 # %%
-sparseMasks = sparseMasks[0:5]
-
 sparseMasks_wo_G = rmGhostNodes(sparseMasks)
 sparseMasks_wo_G_D = rmDeadNodes(sparseMasks_wo_G)
 
@@ -833,6 +653,6 @@ for (sparsity, m) in sparseMasks_wo_G_D:
 
     zscoreDF.loc[len(zscoreDF.index)] = zscoreData
 
-zscoreDF.to_csv(os.path.join(zscoreSubdir, 'zscoreDF.csv'))
+    zscoreDF.to_csv(os.path.join(zscoreSubdir, 'zscoreDF.csv'))
 
 
