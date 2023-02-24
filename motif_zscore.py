@@ -442,30 +442,58 @@ def randomPruning(FOMList, numFC):
 
     #The following is to assure we have at least one live weight connected to each node in
     # the layer (inputs and outputs). 
+
     for r in range(len(rList)):
         if NList[r][2] > 0: 
+            extraNodeCount = 0
             #For each row place a random 1
             for i in range(len(rList[r])):
                 #print('r: %s and i: %s' %(r,i))
                 row = np.array(rList[r][i])
                 zeroElements = np.nonzero(row==0)[0] #Finds all indices with a zero
-                idx = np.random.choice(zeroElements) #Picks a random index
-                rList[r][i][idx] = 1 #Sets the value at that index to one
+
+                #There is a small chance that there are no zero elements even after random shuffling. 
+                #In this situation, we need to keep track of the extra node, and add it in later
+                if len(zeroElements) != 0: #if we've found a nonzero element
+                    idx = np.random.choice(zeroElements) #Picks a random index
+                    rList[r][i][idx] = 1 #Sets the value at that index to one
+                else: 
+                    extraNodeCount += 1
 
             #For each column place a random 1
             for j in range(len(rList[r].T)):
                 #print('r: %s and j: %s' %(r,j))
                 col = np.array(rList[r].T[j])
                 zeroElements = np.nonzero(col==0)[0] #Finds all indices with a zero
-                idx = np.random.choice(zeroElements) #Picks a random index
-                rList[r].T[j][idx] = 1 #Sets the value at that index to one
+                if len(zeroElements) != 0:
+                    idx = np.random.choice(zeroElements) #Picks a random index
+                    rList[r].T[j][idx] = 1 #Sets the value at that index to one
+                else: 
+                    extraNodeCount += 1
+
+            if extraNodeCount != 0: 
+                #If we have some extra nodes, add them in randomly. 
+                for n in range(extraNodeCount):
+                    z = np.nonzero(rList[r]==0)
+                    idx = np.random.choice(np.arange(len(z[0])))
+                    x = z[0][idx]
+                    y = z[1][idx]
+                    rList[r][x][y] = 1
+
         else:
             if r == 3:
                 if NList[r][2] < 0:
-                    flatr = rList[r].flatten()
-                    flatr[0:abs(NList[r][2])] = 1
-                    np.random.shuffle(flatr)
-                    rList[r] = np.reshape(flatr, (numFC[r],numFC[r+1]))
+                    if abs(NList[r][2]) <= (NList[r][0]-numFC[r]):
+                        flatr = rList[r].flatten()
+                        flatr[0:abs(NList[r][2])] = 1
+                        np.random.shuffle(flatr)
+                        rList[r] = np.reshape(flatr, (numFC[r],numFC[r+1]))
+                    else:
+                        flatr = rList[r].flatten()
+                        flatr[0:(NList[r][0]-numFC[r])] = 1
+                        np.random.shuffle(flatr)
+                        rList[r] = np.reshape(flatr, (numFC[r],numFC[r+1]))
+
 
                 #For each row place a random 1
                 for i in range(len(rList[r])):
@@ -479,7 +507,7 @@ def randomPruning(FOMList, numFC):
                     diff = FOMList[r][0] - (abs(NList[r][2])+numFC[r])
                     for d in range(diff): #place a random one in the matrix 
                         z = np.nonzero(rList[r]==0)
-                        idx = np.random.choice(z[0])
+                        idx = np.random.choice(np.arange(len(z[0])))
                         x = z[0][idx]
                         y = z[1][idx]
                         rList[r][x][y] = 1
@@ -501,7 +529,7 @@ def randomPruning(FOMList, numFC):
                             m = np.append(m, col, axis=1)
                         for t in range(numExtraW):
                             z = np.nonzero(m==0)
-                            idx = np.random.choice(z[0])
+                            idx = np.random.choice(np.arange(len(z[0])))
                             x = z[0][idx]
                             y = z[1][idx]
                             m[x][y] = 1
@@ -512,7 +540,7 @@ def randomPruning(FOMList, numFC):
                             idx = np.random.choice(z[0])
                             col[idx] = 1
                             m = np.append(m, col, axis=1)
-                else: #if numFC[r] > numFC[r+1]
+                else: #if numFC[r] >= numFC[r+1]
                     w = FOMList[r][0]
                     numExtraRows = numFC[r]-numFC[r+1]
                     m = np.eye(numFC[r+1])
@@ -527,7 +555,7 @@ def randomPruning(FOMList, numFC):
                             m = np.append(m, row, axis=0)
                         for t in range(numExtraW):
                             z = np.nonzero(m==0)
-                            idx = np.random.choice(z[0])
+                            idx = np.random.choice(np.arange(len(z[0])))
                             x = z[0][idx]
                             y = z[1][idx]
                             m[x][y] = 1
@@ -537,6 +565,7 @@ def randomPruning(FOMList, numFC):
                             z = np.nonzero(row==0)
                             idx = np.random.choice(z[1])
                             row[0][idx] = 1
+                            m = np.append(m, row, axis=0)
                             
                 np.random.shuffle(m)
                 rList[r]=m
@@ -690,8 +719,6 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
 # ### Remove ghost and dead nodes from the networks 
 
 # %% [markdown]
-# sparseMasks = sparseMasks[0:10]
-# 
 # sparseMasks_wo_G = rmGhostNodes(sparseMasks)
 # sparseMasks_wo_G_D = rmDeadNodes(sparseMasks_wo_G)
 # 
@@ -707,16 +734,26 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
 #     rSODM, rnumFC = sodm(randNet)
 #     rSOCM, rnumFCUS = socm(randNet)
 # 
-#     print('Network %s' %(count))
-#     print('Real FOMList: %s' %(FOMList))
-#     print('Random FOMList: %s' %(rFOMList))
-#     print('Real numFC down: %s' %(numFC))
-#     print('Random numFC down: %s' %(rnumFC))
-#     print('Real numFC up: %s' %(numFCUS))
-#     print('Random numFC up: %s' %(rnumFCUS))
+#     if FOMList != rFOMList:
+#         print('Network %s' %(count))
+#         print('Real numFC down: %s' %(numFC))
+#         print('Real FOMList: %s' %(FOMList))
+#         print('Random FOMList: %s' %(rFOMList))
+# 
+#     if numFC != rnumFC:
+#         print('Network %s' %(count))
+#         print('Real numFC down: %s' %(numFC))
+#         print('Random numFC down: %s' %(rnumFC))
+# 
+#     if numFCUS != rnumFCUS:
+#         print('Network %s' %(count))
+#         print('Real numFC up: %s' %(numFCUS))
+#         print('Random numFC up: %s' %(rnumFCUS))
 # 
 #     count+=1
 # 
+# print('done checking')
+#     
 # '''
 # randNet_wo_G = rmGhostNodes(randNetX)
 # randNet_wo_G_D = rmDeadNodes(randNet_wo_G)
@@ -741,8 +778,6 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
 # '''
 
 # %%
-sparseMasks = sparseMasks[0:5]
-
 sparseMasks_wo_G = rmGhostNodes(sparseMasks)
 sparseMasks_wo_G_D = rmDeadNodes(sparseMasks_wo_G)
 
