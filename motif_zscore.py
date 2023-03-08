@@ -504,11 +504,19 @@ def bipar(m):
             
             #Take the factorial of the whole product matrix. 
             #Factorial will have NaN values so np.sum may cause an error 
-            fact_mat = scipy.special.factorial(prod)/(scipy.special.factorial(2)*scipy.special.factorial(prod-2))
+            fact_mat = scipy.special.factorial(prod)
+            
+            fact_2 = math.factorial(2)
+
+            fact_mat_2 = scipy.special.factorial(prod-2)
+
+            denom = fact_2 * fact_mat_2
+
+            comb_mat = np.divide(fact_mat, denom)
 
             #Number of bi-parallel motifs is the sum of the resultant matrix
             #np.nansum returns sum, treating NaN values as zero.
-            BIPAR += np.nansum(fact_mat)
+            BIPAR += np.sum(np.ma.masked_invalid(comb_mat))
             
         else: 
             pass
@@ -928,7 +936,7 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
 # '''
 
 # %%
-sparseMasks = sparseMasks[0:10]
+sparseMasks = sparseMasks[0:5]
 
 # %%
 sparseMasks_wo_G = rmGhostNodes(sparseMasks, rm=True)
