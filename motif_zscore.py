@@ -3,6 +3,7 @@ import os
 import pickle 
 import numpy as np
 import math
+import scipy
 
 import pandas as pd 
 
@@ -20,6 +21,10 @@ zscoreSubdir = os.path.join(zscoreOutput, modeltimestamp)
 if not os.path.exists(zscoreSubdir):
     os.mkdir(zscoreSubdir)
 
+preProcessSubdir = os.path.join(dataOutput, modeltimestamp, 'preprocessedMasks')
+if not os.path.exists(preProcessSubdir):
+    os.mkdir(preProcessSubdir)
+    
 #Load the networks
 sparseNetsFile = 'sparseNetworks.pkl'
 sparseNetworks = pickle.load(open(os.path.join( modelSubdir, sparseNetsFile), 'rb'))
@@ -43,16 +48,60 @@ lossesDF = pd.DataFrame(losses, columns=['0%', '15%', '25%', '35%', '45%', '55%'
 # # Find the masks
 
 # %%
-sparseMasks = []
-for i in range(len(sparseNetworks)):
-    sparsity = sparseNetworks[i][0]
-    m = [masks[sparsity][j][i] for j in range(5)]
-    bm = [bmasks[sparsity][j][i] for j in range(5)]
+findSparseMasks = True
 
-    #Combine mask and bias mask by adding bias mask as last row of mask 
-    mask = [np.append(m[j], np.array(bm[j]).reshape([1, len(bm[j])]), axis=0) for j in range(5)]
+if findSparseMasks == True:
+    #Only find all the sparse masks if they are not already saved
+    sparseMasks = []
+    for i in range(len(sparseNetworks)):
+        sparsity = sparseNetworks[i][0]
+        #Extract the masks using the sparsity index 
+        # masks is organized by [sparsity index][layer number][network number]
 
-    sparseMasks.append((sparsity, mask))
+            
+        m = [masks[sparsity][j][i] for j in range(5)]
+        bm = [bmasks[sparsity][j][i] for j in range(5)]
+
+        #Combine mask and bias mask by adding bias mask as last row of mask 
+        mask = [np.append(m[j], np.array(bm[j]).reshape([1, len(bm[j])]), axis=0) for j in range(5)]
+
+        sparseMasks.append((sparsity, mask))
+    
+    pickle.dump(sparseMasks, open(os.path.join(preProcessSubdir, 'sparseOptimalMasks.pkl'), 'wb'))
+
+else:
+    sparseMasks = pickle.load(open(os.path.join(preProcessSubdir, 'sparseOptimalMasks.pkl'), 'rb'))
+
+
+
+# %%
+'''
+Organization of masks for evaluating motifs throughout pruning.
+'''
+findallPrunedMasks = True
+
+if findallPrunedMasks == True:
+
+    #Only find all the sparse masks if they are not already saved
+    allPrunedNets = []
+    for i in range(len(sparseNetworks)):
+        net = []
+        for s in range(18): #18?
+            m = [masks[s][j][i] for j in range(5)] #combines all layers that belong to a network at a certain sparsity
+            bm = [bmasks[s][j][i] for j in range(5)]
+
+            mask = [np.append(m[j], np.array(bm[j]).reshape([1, len(bm[j])]), axis=0) for j in range(5)]
+            net.append((s, mask))
+
+        allPrunedNets.append(net) #should be len 400
+
+    print(len(allPrunedNets))
+    
+    pickle.dump(allPrunedNets, open(os.path.join(preProcessSubdir, 'allPrunedMasks.pkl'), 'wb'))
+
+else:
+    allPrunedNets = pickle.load(open(os.path.join(preProcessSubdir, 'allPrunedMasks.pkl'), 'rb'))
+
 
 # %% [markdown]
 # # Remove ghost nodes 
@@ -61,32 +110,66 @@ for i in range(len(sparseNetworks)):
 # Ghost nodes: nodes with no upstream input
 
 # %%
-def rmGhostNodes(masks): 
-    sparseMasks_wo_ghosts = []
-    for k in range(len(masks)):
-        count = 0
-        m = masks[k][1]
-        #Iterate over the masking layers in each network 
-        for i in range(len(m)):
-            #Iterate over the columns of the mask 
-            for j in range(len(m[i].T)):
-                column = m[i].T[j]
-                #Check to see if there are any connections between this node and the nodes in the previous layer. 
-                #If there are no connections, that means there are no upstream connections and this is a ghost node. 
-                n = np.count_nonzero(column)
-                if n == 0:
-                    #print('Found a ghost node: %s node in layer %s.' % (j, i))
-                    count += 1
-                    #There is no input into this node 
-                    #so make all downstream connections 0
+def rmGhostNodes(masks, rm=True, allnets=False): 
+    if rm == True:
+        sparseMasks_wo_ghosts = []
 
-                    #i+1 gets us to the next mask 
-                    #where the jth row is the ghost node 
-                    m[i+1][j] = m[i+1][j] * 0
+        #We need slightly different code for removing ghost nodes from all pruned networks
+        if allnets == True:
+            for k in range(len(masks)): #iterate over the networks
+                net = []
+                for s in range(len(masks[k])): #iterate over the sparsities 
+                    count = 0
+                    m = masks[k][s][1]
+                    #Iterate over the masking layers in each network 
+                    for i in range(len(m)):
+                        #Iterate over the columns of the mask 
+                        for j in range(len(m[i].T)):
+                            column = m[i].T[j]
+                            #Check to see if there are any connections between this node and the nodes in the previous layer. 
+                            #If there are no connections, that means there are no upstream connections and this is a ghost node. 
+                            n = np.count_nonzero(column)
+                            if n == 0:
+                                #print('Found a ghost node: %s node in layer %s.' % (j, i))
+                                count += 1
+                                #There is no input into this node 
+                                #so make all downstream connections 0
 
-        sparseMasks_wo_ghosts.append((masks[k][0],m))
+                                #i+1 gets us to the next mask 
+                                #where the jth row is the ghost node 
+                                m[i+1][j] = m[i+1][j] * 0
+                    net.append((masks[k][s][0],m))
 
-    pickle.dump(sparseMasks_wo_ghosts, open(os.path.join(modelSubdir, 'postprune', 'masks_wo_ghost_nodes.pkl'), 'wb'))
+                sparseMasks_wo_ghosts.append(net)
+            
+        else:
+            for k in range(len(masks)):
+                count = 0
+                m = masks[k][1]
+                #Iterate over the masking layers in each network 
+                for i in range(len(m)):
+                    #Iterate over the columns of the mask 
+                    for j in range(len(m[i].T)):
+                        column = m[i].T[j]
+                        #Check to see if there are any connections between this node and the nodes in the previous layer. 
+                        #If there are no connections, that means there are no upstream connections and this is a ghost node. 
+                        n = np.count_nonzero(column)
+                        if n == 0:
+                            #print('Found a ghost node: %s node in layer %s.' % (j, i))
+                            count += 1
+                            #There is no input into this node 
+                            #so make all downstream connections 0
+
+                            #i+1 gets us to the next mask 
+                            #where the jth row is the ghost node 
+                            m[i+1][j] = m[i+1][j] * 0
+
+                sparseMasks_wo_ghosts.append((masks[k][0],m))
+
+            pickle.dump(sparseMasks_wo_ghosts, open(os.path.join(preProcessSubdir, 'masks_wo_ghost_nodes.pkl'), 'wb'))
+
+    else:
+        sparseMasks_wo_ghosts = pickle.load(open(os.path.join(preProcessSubdir, 'masks_wo_ghost_nodes.pkl'), 'rb'))
 
     return sparseMasks_wo_ghosts
 
@@ -97,32 +180,66 @@ def rmGhostNodes(masks):
 # Dead nodes: nodes with no downstream output
 
 # %%
-def rmDeadNodes(masks): 
-    sparseMasks_wo_dead = []
-    for k in range(len(masks)):
-        count = 0
-        m = masks[k][1]
-        #Reverse iterate over the masking layers in each network, excluding the input and output layers
-        for i in reversed(range(1, len(m))):
-            #Iterate over the rows of the mask, skipping the bias (last row)
-            for j in range(len(m[i])-1):
-                row = m[i][j]
-                #Check to see if there are any connections between this node and the nodes in the next layer. 
-                #If there are no connections, that means there are no downstream connections and this is a dead node. 
-                n = np.count_nonzero(row)
-                if n == 0:
-                    #print('Found a dead node: %s node in layer %s.' % (j, i))
-                    count += 1
-                    #There is no output from this node 
-                    #so make all upstream connections 0
+def rmDeadNodes(masks, rm=True, allNets=False): 
+    if rm == True:
+        sparseMasks_wo_dead = []
 
-                    #i-1 gets us to the previous mask 
-                    #where the jth column is the ghost node 
-                    m[i-1].T[j] = m[i-1].T[j] * 0
+        #We need slightly different code for removing ghost nodes from all pruned networks
+        if allNets == True:
+            for k in range(len(masks)): #iterate over the networks
+                net = []
+                for s in range(len(masks[k])): #iterate over the sparsities 
+                    count = 0
+                    m = masks[k][s][1]
+                    #Reverse iterate over the masking layers in each network, excluding the input and output layers
+                    for i in reversed(range(1, len(m))):
+                        #Iterate over the rows of the mask, skipping the bias (last row)
+                        for j in range(len(m[i])-1):
+                            row = m[i][j]
+                            #Check to see if there are any connections between this node and the nodes in the next layer. 
+                            #If there are no connections, that means there are no downstream connections and this is a dead node. 
+                            n = np.count_nonzero(row)
+                            if n == 0:
+                                #print('Found a dead node: %s node in layer %s.' % (j, i))
+                                count += 1
+                                #There is no output from this node 
+                                #so make all upstream connections 0
 
-        sparseMasks_wo_dead.append((masks[k][0],m))
+                                #i-1 gets us to the previous mask 
+                                #where the jth column is the ghost node 
+                                m[i-1].T[j] = m[i-1].T[j] * 0
 
-    pickle.dump(sparseMasks_wo_dead, open(os.path.join(modelSubdir, 'postprune', 'masks_wo_dead_nodes.pkl'), 'wb'))
+                    net.append((masks[k][s][0],m))
+                    
+                sparseMasks_wo_dead.append(net)
+        else:
+            for k in range(len(masks)):
+                count = 0
+                m = masks[k][1]
+                #Reverse iterate over the masking layers in each network, excluding the input and output layers
+                for i in reversed(range(1, len(m))):
+                    #Iterate over the rows of the mask, skipping the bias (last row)
+                    for j in range(len(m[i])-1):
+                        row = m[i][j]
+                        #Check to see if there are any connections between this node and the nodes in the next layer. 
+                        #If there are no connections, that means there are no downstream connections and this is a dead node. 
+                        n = np.count_nonzero(row)
+                        if n == 0:
+                            #print('Found a dead node: %s node in layer %s.' % (j, i))
+                            count += 1
+                            #There is no output from this node 
+                            #so make all upstream connections 0
+
+                            #i-1 gets us to the previous mask 
+                            #where the jth column is the ghost node 
+                            m[i-1].T[j] = m[i-1].T[j] * 0
+
+                sparseMasks_wo_dead.append((masks[k][0],m))
+
+        pickle.dump(sparseMasks_wo_dead, open(os.path.join(preProcessSubdir, 'masks_wo_dead_nodes.pkl'), 'wb'))
+
+    else:
+        sparseMasks_wo_dead = pickle.load(open(os.path.join(preProcessSubdir, 'masks_wo_dead_nodes.pkl'), 'rb'))
 
     return sparseMasks_wo_dead
 
@@ -366,6 +483,37 @@ def bifan(m):
                     BIFAN += math.factorial(n)/(math.factorial(2)*math.factorial(n-2))
     
     return BIFAN
+
+# %% [markdown]
+# #### Bi-parallel
+
+# %%
+def bipar(m):
+    '''
+    Calculates the number of bi-parallel motifs in the network.
+        
+    Input(s): the mask of the pruned network, as a list of matrices
+    Returns: BIPAR (total number of bi-parallel motifs in the network)
+    '''
+    BIPAR = 0 
+    for i in range(len(m)): 
+        if i != 4: 
+            #Find the product between two layers.
+            #Exclude the bias by excluding the last row
+            prod = np.matmul(m[i],m[i+1][0:-1])
+            
+            #Take the factorial of the whole product matrix. 
+            #Factorial will have NaN values so np.sum may cause an error 
+            fact_mat = scipy.special.factorial(prod)/(scipy.special.factorial(2)*scipy.special.factorial(prod-2))
+
+            #Number of bi-parallel motifs is the sum of the resultant matrix
+            #np.nansum returns sum, treating NaN values as zero.
+            BIPAR += np.nansum(fact_mat)
+            
+        else: 
+            pass
+    
+    return BIPAR
 
 # %% [markdown]
 # ### Random networks
@@ -676,8 +824,9 @@ def randomNetMotifs(randomNet):
     rTOCM = tocm(randomNet)
     rTOChain = tochain(randomNet)
     rBIFAN = bifan(randomNet)
+    rBIPAR = bipar(randomNet)
     
-    return rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain, rBIFAN, rnumFC, rnumFCUS
+    return rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain, rBIFAN, rBIPAR, rnumFC, rnumFCUS
 
 # %% [markdown]
 # #### Average random motifs
@@ -700,14 +849,15 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
                                         'rTOCM', 
                                         'rTOChain',
                                         'rBIFAN',
+                                        'rBIPAR',
                                         'rnumFC',
                                         'rnumFCUS'])
 
     for r in range(numRand):
         randomNet = randomPruning(FOMList, numFC)
-        rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain, rBIFAN, rnumFC, rnumFCUS = randomNetMotifs(randomNet)
+        rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain, rBIFAN, rBIPAR, rnumFC, rnumFCUS = randomNetMotifs(randomNet)
 
-        rMotifs = [float(rSODM), float(rSOCM), float(rSOChain), float(rTODM), float(rTOCM), float(rTOChain), float(rBIFAN), rnumFC, rnumFCUS]
+        rMotifs = [float(rSODM), float(rSOCM), float(rSOChain), float(rTODM), float(rTOCM), float(rTOChain), float(rBIFAN), float(rBIPAR), rnumFC, rnumFCUS]
         randomNetDF.loc[len(randomNetDF.index)] = rMotifs
 
     return randomNetDF
@@ -778,8 +928,11 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
 # '''
 
 # %%
-sparseMasks_wo_G = rmGhostNodes(sparseMasks)
-sparseMasks_wo_G_D = rmDeadNodes(sparseMasks_wo_G)
+sparseMasks = sparseMasks[0:10]
+
+# %%
+sparseMasks_wo_G = rmGhostNodes(sparseMasks, rm=True)
+sparseMasks_wo_G_D = rmDeadNodes(sparseMasks_wo_G, rm=True)
 
 # %%
 zscoreDF = pd.DataFrame(columns=['Sparsity Index', 'Masks',
@@ -787,23 +940,23 @@ zscoreDF = pd.DataFrame(columns=['Sparsity Index', 'Masks',
                                 'S-O diverging motifs (real)', 'S-O converging motifs (real)', 
                                 'S-O chain motifs (real)',  'T-O chain motifs (real)',
                                 'T-O diverging motifs (real)', 'T-O converging motifs (real)',
-                                'T-O Bi-Fan motifs (real)',
+                                'T-O Bi-Fan motifs (real)', 'T-O Bi-Parallel motifs (real)',
                                 
                                 'Avg - S-O diverging motifs (random)', 'Avg - S-O converging motifs (random)', 
                                 'Avg - S-O chain motifs (random)',  'Avg - T-O chain motifs (random)',
                                 'Avg - T-O diverging motifs (random)', 'Avg - T-O converging motifs (random)',
-                                'Avg - T-O Bi-Fan motifs',
+                                'Avg - T-O Bi-Fan motifs', 'Avg - T-O Bi-Parallel motifs',
 
                                  
                                 'SD - S-O diverging motifs (random)', 'SD - S-O converging motifs (random)', 
                                 'SD - S-O chain motifs (random)',  'SD - T-O chain motifs (random)',
                                 'SD - T-O diverging motifs (random)', 'SD - T-O converging motifs (random)',
-                                'SD - T-O Bi-Fan motifs',
+                                'SD - T-O Bi-Fan motifs', 'SD - T-O Bi-Parallel motifs',
                                 
                                 'Z - S-O diverging motifs', 'Z - S-O converging motifs', 
                                 'Z - S-O chain motifs',  'Z - T-O chain motifs',
                                 'Z - T-O diverging motifs', 'Z - T-O converging motifs',
-                                'Z - T-O Bi-Fan motifs',
+                                'Z - T-O Bi-Fan motifs', 'Z - T-O Bi-Parallel motifs',
 
                                 'Number of nodes in each layer with downstream output',
                                 'Number of nodes in each layer with upstream input', 
@@ -819,6 +972,7 @@ for (sparsity, m) in sparseMasks_wo_G_D:
     TOCM = tocm(m)
     TOChain = tochain(m)
     BIFAN = bifan(m)
+    BIPAR = bipar(m)
 
     randomNetDF = buildRandomMotifsDF(numFC, FOMList, numRand=1000)
 
@@ -829,6 +983,7 @@ for (sparsity, m) in sparseMasks_wo_G_D:
     AvgrTOCM = randomNetDF['rTOCM'].mean()
     AvgrTOChain = randomNetDF['rTOChain'].mean()
     AvgrBIFAN = randomNetDF['rBIFAN'].mean()
+    AvgrBIPAR = randomNetDF['rBIPAR'].mean()
 
     SDrSODM = randomNetDF['rSODM'].std()
     SDrSOCM = randomNetDF['rSOCM'].std()
@@ -837,6 +992,7 @@ for (sparsity, m) in sparseMasks_wo_G_D:
     SDrTOCM = randomNetDF['rTOCM'].std()
     SDrTOChain = randomNetDF['rTOChain'].std()
     SDrBIFAN = randomNetDF['rBIFAN'].std()
+    SDrBIPAR = randomNetDF['rBIPAR'].std()
 
     ZSODM = (SODM - AvgrSODM)/SDrSODM
     ZSOCM = (SOCM - AvgrSOCM)/SDrSOCM
@@ -845,29 +1001,35 @@ for (sparsity, m) in sparseMasks_wo_G_D:
     ZTOCM = (TOCM - AvgrTOCM)/SDrTOCM
     ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
     ZBIFAN = (BIFAN - AvgrBIFAN)/SDrBIFAN
+    ZBIPAR = (BIPAR - AvgrBIPAR)/SDrBIPAR
 
     zscoreData = [float(sparsity), m, 
                     float(FOM), 
                     float(SODM), float(SOCM), float(SOChain),
                     float(TODM), float(TOCM), float(TOChain),
-                    float(BIFAN),
+                    float(BIFAN), float(BIPAR),
 
                     float(AvgrSODM), float(AvgrSOCM), float(AvgrSOChain),
                     float(AvgrTODM), float(AvgrTOCM), float(AvgrTOChain),
-                    float(AvgrBIFAN),
+                    float(AvgrBIFAN), float(AvgrBIPAR),
 
                     float(SDrSODM), float(SDrSOCM), float(SDrSOChain),
                     float(SDrTODM), float(SDrTOCM), float(SDrTOChain),
-                    float(SDrBIFAN),
+                    float(SDrBIFAN), float(SDrBIPAR),
 
                     float(ZSODM), float(ZSOCM), float(ZSOChain),
                     float(ZTODM), float(ZTOCM), float(ZTOChain),
-                    float(ZBIFAN),
+                    float(ZBIFAN), float(ZBIPAR),
 
                     numFC, numFCUS, FOMList]
 
     zscoreDF.loc[len(zscoreDF.index)] = zscoreData
 
 zscoreDF.to_csv(os.path.join(zscoreSubdir, 'zscoreDF.csv'))
+print(zscoreDF.head())
+
+# %%
+#allsparseMasks_wo_G = rmGhostNodes(allPrunedNets, rm=True, allnets=True)
+#allsparseMasks_wo_G_D = rmDeadNodes(allsparseMasks_wo_G, rm=True, allNets=True)
 
 
