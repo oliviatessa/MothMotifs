@@ -933,7 +933,7 @@ for (sparsity, m) in sparseMasks_wo_G_D:
     BIFAN = bifan(m)
     BIPAR = bipar(m)
 
-    randomNetDF = buildRandomMotifsDF(numFC, FOMList, numRand=1)
+    randomNetDF = buildRandomMotifsDF(numFC, FOMList, numRand=10)
 
     AvgrSODM = randomNetDF['rSODM'].mean()
     AvgrSOCM = randomNetDF['rSOCM'].mean()
