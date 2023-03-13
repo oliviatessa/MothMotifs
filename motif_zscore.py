@@ -93,9 +93,7 @@ if findallPrunedMasks == True:
             mask = [np.append(m[j], np.array(bm[j]).reshape([1, len(bm[j])]), axis=0) for j in range(5)]
             net.append((s, mask))
 
-        allPrunedNets.append(net) #should be len 400
-
-    print(len(allPrunedNets))
+        allPrunedNets.append(net)
     
     pickle.dump(allPrunedNets, open(os.path.join(preProcessSubdir, 'allPrunedMasks.pkl'), 'wb'))
 
@@ -120,27 +118,30 @@ def rmGhostNodes(masks, rm=True, allnets=False):
                 net = []
                 for s in range(len(masks[k])): #iterate over the sparsities 
                     count = 0
-                    m = masks[k][s][1]
+
                     #Iterate over the masking layers in each network 
-                    for i in range(len(m)):
-                        #Iterate over the columns of the mask 
-                        for j in range(len(m[i].T)):
-                            column = m[i].T[j]
-                            #Check to see if there are any connections between this node and the nodes in the previous layer. 
-                            #If there are no connections, that means there are no upstream connections and this is a ghost node. 
-                            n = np.count_nonzero(column)
-                            if n == 0:
-                                #print('Found a ghost node: %s node in layer %s.' % (j, i))
-                                count += 1
-                                #There is no input into this node 
-                                #so make all downstream connections 0
+                    for l in range(len(masks[k][s][1])):
+                        m = masks[k][s][1][l]
+                        print(m.shape)
+                        for i in range(len(m)):
+                            #Iterate over the columns of the mask 
+                            for j in range(len(m[i].T)):
+                                column = m[i].T[j]
+                                #Check to see if there are any connections between this node and the nodes in the previous layer. 
+                                #If there are no connections, that means there are no upstream connections and this is a ghost node. 
+                                n = np.count_nonzero(column)
+                                if n == 0:
+                                    #print('Found a ghost node: %s node in layer %s.' % (j, i))
+                                    count += 1
+                                    #There is no input into this node 
+                                    #so make all downstream connections 0
 
-                                #i+1 gets us to the next mask 
-                                #where the jth row is the ghost node 
-                                m[i+1][j] = m[i+1][j] * 0
-                    net.append((masks[k][s][0],m))
+                                    #i+1 gets us to the next mask 
+                                    #where the jth row is the ghost node 
+                                    m[i+1][j] = m[i+1][j] * 0
+                        net.append((masks[k][s][0],m))
 
-                sparseMasks_wo_ghosts.append(net)
+                    sparseMasks_wo_ghosts.append(net)
             
         else:
             for k in range(len(masks)):
@@ -514,9 +515,12 @@ def bipar(m):
 
             comb_mat = np.divide(fact_mat, denom)
 
-            #Number of bi-parallel motifs is the sum of the resultant matrix
-            #np.nansum returns sum, treating NaN values as zero.
-            BIPAR += np.sum(np.ma.masked_invalid(comb_mat))
+            if math.isnan(np.sum(np.ma.masked_invalid(comb_mat))):
+                pass
+            else:
+                #Number of bi-parallel motifs is the sum of the resultant matrix
+                BIPAR += np.sum(np.ma.masked_invalid(comb_mat))
+            
             
         else: 
             pass
@@ -834,7 +838,7 @@ def randomNetMotifs(randomNet):
     rBIFAN = bifan(randomNet)
     rBIPAR = bipar(randomNet)
     
-    return rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain, rBIFAN, rBIPAR, rnumFC, rnumFCUS
+    return rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain, rBIFAN, rBIPAR, rnumFC, rnumFCUS 
 
 # %% [markdown]
 # #### Average random motifs
@@ -860,12 +864,13 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
                                         'rBIPAR',
                                         'rnumFC',
                                         'rnumFCUS'])
+    #
 
     for r in range(numRand):
         randomNet = randomPruning(FOMList, numFC)
-        rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain, rBIFAN, rBIPAR, rnumFC, rnumFCUS = randomNetMotifs(randomNet)
+        rFOM, rFOMList, rSODM, rSOCM, rSOChain, rTODM, rTOCM, rTOChain, rBIFAN, rBIPAR, rnumFC, rnumFCUS = randomNetMotifs(randomNet) #
 
-        rMotifs = [float(rSODM), float(rSOCM), float(rSOChain), float(rTODM), float(rTOCM), float(rTOChain), float(rBIFAN), float(rBIPAR), rnumFC, rnumFCUS]
+        rMotifs = [float(rSODM), float(rSOCM), float(rSOChain), float(rTODM), float(rTOCM), float(rTOChain), float(rBIFAN), float(rBIPAR), rnumFC, rnumFCUS] #
         randomNetDF.loc[len(randomNetDF.index)] = rMotifs
 
     return randomNetDF
@@ -875,65 +880,6 @@ def buildRandomMotifsDF(numFC, FOMList, numRand=1000):
 
 # %% [markdown]
 # ### Remove ghost and dead nodes from the networks 
-
-# %% [markdown]
-# sparseMasks_wo_G = rmGhostNodes(sparseMasks)
-# sparseMasks_wo_G_D = rmDeadNodes(sparseMasks_wo_G)
-# 
-# count=0
-# for (sparsity, m) in sparseMasks:
-#     FOM, FOMList = fom(m)
-#     SODM, numFC = sodm(m)
-#     SOCM, numFCUS = socm(m)
-# 
-#     randNet = randomPruning(FOMList, numFC)
-# 
-#     rFOM, rFOMList = fom(randNet)
-#     rSODM, rnumFC = sodm(randNet)
-#     rSOCM, rnumFCUS = socm(randNet)
-# 
-#     if FOMList != rFOMList:
-#         print('Network %s' %(count))
-#         print('Real numFC down: %s' %(numFC))
-#         print('Real FOMList: %s' %(FOMList))
-#         print('Random FOMList: %s' %(rFOMList))
-# 
-#     if numFC != rnumFC:
-#         print('Network %s' %(count))
-#         print('Real numFC down: %s' %(numFC))
-#         print('Random numFC down: %s' %(rnumFC))
-# 
-#     if numFCUS != rnumFCUS:
-#         print('Network %s' %(count))
-#         print('Real numFC up: %s' %(numFCUS))
-#         print('Random numFC up: %s' %(rnumFCUS))
-# 
-#     count+=1
-# 
-# print('done checking')
-#     
-# '''
-# randNet_wo_G = rmGhostNodes(randNetX)
-# randNet_wo_G_D = rmDeadNodes(randNet_wo_G)
-# 
-# for (sparsity, m) in sparseMasks_wo_G_D:
-#     FOM, numW_and_B = fom(m)
-#     SODM, numFC = sodm(m)
-#     SOCM, numFCUS = socm(m)
-#     
-#     randNet = randNet_wo_G_D[1]
-# 
-#     rFOM, rFOMList = fom(randNet)
-#     rSODM, rnumFC = sodm(randNet)
-#     rSOCM, rnumFCUS = socm(randNet)
-# 
-#     print(numW_and_B)
-#     print(rFOMList)
-#     print(numFC)
-#     print(rnumFC)
-#     print(numFCUS)
-#     print(rnumFCUS)
-# '''
 
 # %%
 sparseMasks = sparseMasks[0:5]
@@ -970,6 +916,11 @@ zscoreDF = pd.DataFrame(columns=['Sparsity Index', 'Masks',
                                 'Number of nodes in each layer with upstream input', 
                                 'Number of connections in each layer'])
 
+#
+#
+#
+#
+
 # %%
 for (sparsity, m) in sparseMasks_wo_G_D: 
     FOM, FOMList = fom(m)
@@ -982,7 +933,7 @@ for (sparsity, m) in sparseMasks_wo_G_D:
     BIFAN = bifan(m)
     BIPAR = bipar(m)
 
-    randomNetDF = buildRandomMotifsDF(numFC, FOMList, numRand=1000)
+    randomNetDF = buildRandomMotifsDF(numFC, FOMList, numRand=1)
 
     AvgrSODM = randomNetDF['rSODM'].mean()
     AvgrSOCM = randomNetDF['rSOCM'].mean()
@@ -1030,14 +981,82 @@ for (sparsity, m) in sparseMasks_wo_G_D:
                     float(ZBIFAN), float(ZBIPAR),
 
                     numFC, numFCUS, FOMList]
+    
+    #
+    #
+    #
+    #
 
     zscoreDF.loc[len(zscoreDF.index)] = zscoreData
 
 zscoreDF.to_csv(os.path.join(zscoreSubdir, 'zscoreDF.csv'))
-print(zscoreDF.head())
 
-# %%
-#allsparseMasks_wo_G = rmGhostNodes(allPrunedNets, rm=True, allnets=True)
-#allsparseMasks_wo_G_D = rmDeadNodes(allsparseMasks_wo_G, rm=True, allNets=True)
+
+# %% [markdown]
+# allPrunedNets = allPrunedNets[0:1]
+# 
+# allsparseMasks_wo_G = rmGhostNodes(allPrunedNets, rm=True, allnets=True)
+# #allsparseMasks_wo_G_D = rmDeadNodes(allsparseMasks_wo_G, rm=True, allNets=True)
+# 
+
+# %% [markdown]
+# count=0
+# for net in allsparseMasks_wo_G_D:
+#     for s in range(len(net)):
+#         sparsity = net[s][0]
+#         m = net[s][1]
+# 
+#         FOM, FOMList = fom(m)
+#         SODM, numFC = sodm(m)
+#         SOCM, numFCUS = socm(m)
+# 
+#         randNet = randomPruning(FOMList, numFC)
+# 
+#         rFOM, rFOMList = fom(randNet)
+#         rSODM, rnumFC = sodm(randNet)
+#         rSOCM, rnumFCUS = socm(randNet)
+# 
+#         if FOMList != rFOMList:
+#             print('Network %s' %(count))
+#             print('Real numFC down: %s' %(numFC))
+#             print('Real FOMList: %s' %(FOMList))
+#             print('Random FOMList: %s' %(rFOMList))
+# 
+#         if numFC != rnumFC:
+#             print('Network %s' %(count))
+#             print('Real numFC down: %s' %(numFC))
+#             print('Random numFC down: %s' %(rnumFC))
+# 
+#         if numFCUS != rnumFCUS:
+#             print('Network %s' %(count))
+#             print('Real numFC up: %s' %(numFCUS))
+#             print('Random numFC up: %s' %(rnumFCUS))
+# 
+#         count+=1
+# 
+#     print('done checking')
+#     
+# '''
+# randNet_wo_G = rmGhostNodes(randNetX)
+# randNet_wo_G_D = rmDeadNodes(randNet_wo_G)
+# 
+# for (sparsity, m) in sparseMasks_wo_G_D:
+#     FOM, numW_and_B = fom(m)
+#     SODM, numFC = sodm(m)
+#     SOCM, numFCUS = socm(m)
+#     
+#     randNet = randNet_wo_G_D[1]
+# 
+#     rFOM, rFOMList = fom(randNet)
+#     rSODM, rnumFC = sodm(randNet)
+#     rSOCM, rnumFCUS = socm(randNet)
+# 
+#     print(numW_and_B)
+#     print(rFOMList)
+#     print(numFC)
+#     print(rnumFC)
+#     print(numFCUS)
+#     print(rnumFCUS)
+# '''
 
 
