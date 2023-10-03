@@ -1,2 +1,132 @@
-/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/motif_zscore.py:557: RuntimeWarning: divide by zero encountered in double_scalars
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1074: RuntimeWarning: invalid value encountered in double_scalars
+  ZSOChain = (SOChain - AvgrSOChain)/SDrSOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1074: RuntimeWarning: invalid value encountered in double_scalars
+  ZSOChain = (SOChain - AvgrSOChain)/SDrSOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1074: RuntimeWarning: invalid value encountered in double_scalars
+  ZSOChain = (SOChain - AvgrSOChain)/SDrSOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1074: RuntimeWarning: invalid value encountered in double_scalars
+  ZSOChain = (SOChain - AvgrSOChain)/SDrSOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1074: RuntimeWarning: invalid value encountered in double_scalars
+  ZSOChain = (SOChain - AvgrSOChain)/SDrSOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: divide by zero encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1074: RuntimeWarning: invalid value encountered in double_scalars
+  ZSOChain = (SOChain - AvgrSOChain)/SDrSOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1074: RuntimeWarning: invalid value encountered in double_scalars
+  ZSOChain = (SOChain - AvgrSOChain)/SDrSOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1074: RuntimeWarning: invalid value encountered in double_scalars
+  ZSOChain = (SOChain - AvgrSOChain)/SDrSOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
+  ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
+/mmfs1/gscratch/dynamicsai/otthomas/MothMotifs/MothMotifs/test.py:1077: RuntimeWarning: invalid value encountered in double_scalars
   ZTOChain = (TOChain - AvgrTOChain)/SDrTOChain
